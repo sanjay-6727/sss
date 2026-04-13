@@ -1,0 +1,25 @@
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - cp index.html public/
+    - cp style.css public/ || true
+    - cp script.js public/ || true
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+
+
+
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - cp f.html public/index.html
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

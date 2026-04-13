@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f2f2f2;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .product {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .logout {
+            background: red;
+        }
+
+        .logout:hover {
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="card" id="loginPage">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Enter username">
+            <select id="role">
+                <option value="customer">Customer</option>
+                <option value="seller">Seller</option>
+                <option value="admin">Admin</option>
+            </select>
+            <button onclick="login()">Login</button>
+        </div>
+
+        <div class="card" id="shopPage" style="display:none;">
+            <h2 id="welcome"></h2>
+
+            <button class="logout" onclick="logout()">Logout</button>
+
+            <h3>Products</h3>
+
+            <div class="product">
+                <p>Phone - ₹20000</p>
+                <button onclick="addToCart('Phone', 20000)">Add to Cart</button>
+            </div>
+
+            <div class="product">
+                <p>Laptop - ₹50000</p>
+                <button onclick="addToCart('Laptop', 50000)">Add to Cart</button>
+            </div>
+
+            <div class="product">
+                <p>Headphones - ₹3000</p>
+                <button onclick="addToCart('Headphones', 3000)">Add to Cart</button>
+            </div>
+
+            <h3>Cart</h3>
+
+            <h3>Payment Method</h3>
+            <select id="paymentMethod">
+                <option>Cash on Delivery</option>
+                <option>UPI</option>
+                <option>Credit Card</option>
+                <option>Debit Card</option>
+            </select>
+
+            <button onclick="buyNow()">Buy Now</button>
+
+            <div id="adminPanel" style="display:none; margin-top:20px; border:1px solid black; padding:10px;">
+                <h3>Admin Panel</h3>
+                <p>Only admin can see this section.</p>
+                <button onclick="alert('Admin can add products')">Add Product</button>
+                <button onclick="alert('Admin can delete products')">Delete Product</button>
+                <button onclick="alert('Admin can view all users')">View Users</button>
+                <button onclick="generateReport()">Generate Report</button>
+            </div>
+
+            <div id="reportSection" style="display:none; margin-top:20px; border:1px solid green; padding:10px; background:#eef;">
+                <h3>System Report</h3>
+                <div id="reportContent"></div>
+            </div>
+            <div id="cartItems"></div>
+            <h3 id="total"></h3>
+        </div>
+
+    </div>
+
+    <script>
+        function login() {
+            let username = document.getElementById("username").value;
+            let role = document.getElementById("role").value;
+
+            if (username === "") {
+                alert("Enter username");
+                return;
+            }
+
+            localStorage.setItem("currentUser", username);
+            localStorage.setItem("currentRole", role);
+            window.location.href = window.location.href;
+        }
+
+        function logout() {
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("currentRole");
+            window.location.href = window.location.href;
+        }
+
+        function addToCart(productName, price) {
+            let currentUser = localStorage.getItem("currentUser");
+            let cartKey = currentUser + "_cart";
+
+            let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+            cart.push({
+                name: productName,
+                price: price
+            });
+
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            loadCart();
+        }
+
+        function loadCart() {
+            let currentUser = localStorage.getItem("currentUser");
+            let cartKey = currentUser + "_cart";
+
+            let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+            let cartItemsDiv = document.getElementById("cartItems");
+            let totalDiv = document.getElementById("total");
+
+            cartItemsDiv.innerHTML = "";
+
+            let total = 0;
+
+            for (let i = 0; i < cart.length; i++) {
+                total += cart[i].price;
+
+                cartItemsDiv.innerHTML += `
+                    <div class="product">
+                        <p>${cart[i].name} - ₹${cart[i].price}</p>
+                        <button onclick="removeItem(${i})">Remove</button>
+                    </div>
+                `;
+            }
+
+            totalDiv.innerText = "Total: ₹" + total;
+        }
+
+        function removeItem(index) {
+            let currentUser = localStorage.getItem("currentUser");
+            let cartKey = currentUser + "_cart";
+
+            let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+            cart.splice(index, 1);
+
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            loadCart();
+        }
+
+        function buyNow() {
+            let paymentMethod = document.getElementById("paymentMethod").value;
+            let currentUser = localStorage.getItem("currentUser");
+            let cartKey = currentUser + "_cart";
+
+            let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+            if (cart.length === 0) {
+                alert("Cart is empty");
+                return;
+            }
+
+            alert("Order placed successfully using " + paymentMethod);
+
+            localStorage.removeItem(cartKey);
+            loadCart();
+        }
+
+        function generateReport() {
+            let currentUser = localStorage.getItem("currentUser");
+            let currentRole = localStorage.getItem("currentRole");
+            let cartKey = currentUser + "_cart";
+            let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+            let total = 0;
+
+            for (let i = 0; i < cart.length; i++) {
+                total += cart[i].price;
+            }
+
+            document.getElementById("reportSection").style.display = "block";
+            document.getElementById("reportContent").innerHTML = `
+                <p><b>User:</b> ${currentUser}</p>
+                <p><b>Role:</b> ${currentRole}</p>
+                <p><b>Total Items in Cart:</b> ${cart.length}</p>
+                <p><b>Total Amount:</b> ₹${total}</p>
+                <p><b>Report Generated On:</b> ${new Date().toLocaleString()}</p>
+            `;
+        }
+
+        function checkLogin() {
+            let currentUser = localStorage.getItem("currentUser");
+            let currentRole = localStorage.getItem("currentRole");
+
+            if (currentUser) {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("shopPage").style.display = "block";
+                document.getElementById("welcome").innerText = "Welcome " + currentUser + " (" + currentRole + ")";
+
+                if (currentRole === "admin") {
+                    document.getElementById("adminPanel").style.display = "block";
+                }
+
+                loadCart();
+            }
+        }
+
+        checkLogin();
+    </script>
+
+</body>
+</html>
+
